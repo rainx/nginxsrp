@@ -160,7 +160,7 @@ typedef struct {
 } ngx_variable_value_t;
 }}}
 
-可以看出 ngx_str_t 在原有的uchar* 的基础上加入的字符串长度的附加信息， 初始化使用ngx_string宏进行，他的定义为：
+可以看出 ngx_str_t 在原有的`uchar*` 的基础上加入的字符串长度的附加信息， 初始化使用ngx_string宏进行，他的定义为：
 {{{
 #define ngx_string(str)     { sizeof(str) - 1, (u_char *) str }
 }}}
