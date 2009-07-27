@@ -1,0 +1,18 @@
+#summary Ningx代码研究.
+
+= 概述 =
+
+对于nginx代码的研究，从而学习nginx模块，特别是对于分段反向代理相关部分的实现的研究，保证分段反向代理的开发的完成
+
+
+= 研究计划 =
+
+下面是王晓哲帮助制定的调研计划
+
+ * 学习emiller的文章
+ * 熟悉nginx的基本数据结构 1w
+ * 了解nginx的core module 的结构和运行机制， 同时参考 event 和 os module 的实现 1w
+ * 了解nginx的http core module 的结构和运行机制 1w
+ * 学习handler 类型module的编写 2d
+ * 学习filter 类型module的编写 2d
+ * upstream类型module的编写 1w
