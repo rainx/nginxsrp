@@ -16,3 +16,11 @@
  * 学习handler 类型module的编写 2d
  * 学习filter 类型module的编写 2d
  * upstream类型module的编写 1w
+
+= 研究文档 =
+
+== 学习emiller的文章 ==
+
+http://www.evanmiller.org/nginx-modules-guide.html
+
+== 熟悉nginx的基本数据结构 ==
