@@ -188,20 +188,25 @@ int main()
 {
     u_char* p = NULL;
     ngx_str_t dst;
-    ngx_str_t mystr = ngx_string("hello, world\n");
-    p = malloc( ngx_base64_encoded_length(mystr.len) + 2 );
+    ngx_str_t mystr = ngx_string("hello, world !");
+    int dst_len  =ngx_base64_encoded_length(mystr.len);
+    printf("source length is %d, destination length is %d\n", mystr.len, dst_len );
+    p = malloc( ngx_base64_encoded_length(mystr.len));
     dst.data = p;
     ngx_encode_base64(&dst, &mystr);
-    printf("%s\n", (dst.data));
+    printf("source str is %s\ndestination str is %s\n", mystr.data, dst.data);
     free(p);
     return 0;
 }
+
 }}}
 
 编译运行 
 {{{
 gcc  -c -O -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Wunused-function -Wunused-variable -Wunused-value -Werror -g -I ../../../objs/ -I ../../os/unix/ basic_types_str.c -I../../core/ -I../../event/ -I../../os/ -o basic_types_str.o
 gcc -o basic_types_str basic_types_str.o ../../../objs/src/core/ngx_{string,palloc}.o ../../../objs/src/os/unix/ngx_alloc.o -lcrypt -lpcre -lcrypto -lz
-$ ./basic_types_str
-aGVsbG8sIHdvcmxkCg==
+rainx@rainx-laptop:~/land/nginx-0.7.61/src/demo/basic_types$ ./basic_types_str 
+source length is 14, destination length is 20
+source str is hello, world !
+destination str is aGVsbG8sIHdvcmxkICE=
 }}}
