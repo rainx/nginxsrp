@@ -164,3 +164,44 @@ typedef struct {
 {{{
 #define ngx_string(str)     { sizeof(str) - 1, (u_char *) str }
 }}}
+
+测试字符串的代码
+demo/basic_types/basic_types_str.c 
+{{{
+#include <stdio.h>
+#include "ngx_config.h"
+#include "ngx_conf_file.h"
+#include "nginx.h"
+#include "ngx_core.h"
+#include "ngx_string.h"
+#include "ngx_string.h"
+
+volatile ngx_cycle_t  *ngx_cycle;
+
+void
+ngx_log_error_core(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
+            const char *fmt, ...)
+{
+}
+
+int main()
+{
+    u_char* p = NULL;
+    ngx_str_t dst;
+    ngx_str_t mystr = ngx_string("hello, world\n");
+    p = malloc( ngx_base64_encoded_length(mystr.len) + 2 );
+    dst.data = p;
+    ngx_encode_base64(&dst, &mystr);
+    printf("%s\n", (dst.data));
+    free(p);
+    return 0;
+}
+}}}
+
+编译运行 
+{{{
+gcc  -c -O -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Wunused-function -Wunused-variable -Wunused-value -Werror -g -I ../../../objs/ -I ../../os/unix/ basic_types_str.c -I../../core/ -I../../event/ -I../../os/ -o basic_types_str.o
+gcc -o basic_types_str basic_types_str.o ../../../objs/src/core/ngx_{string,palloc}.o ../../../objs/src/os/unix/ngx_alloc.o -lcrypt -lpcre -lcrypto -lz
+$ ./basic_types_str
+aGVsbG8sIHdvcmxkCg==
+}}}
