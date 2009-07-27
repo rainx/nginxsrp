@@ -59,7 +59,7 @@ core  event  http  mail  misc  os
 
  * *core* : 该目录存放core module的代码，也是nginx服务的入口
  * *http* : http core module 的代码，nginx作为web/http proxy server运行时的核心模块
- * *mail* : mail core module 的代么，nginx作为mail/mail proxy server运行时的核心模块 ( 不在我们本次研究范围内 )
+ * *mail* : mail core module 的代码，nginx作为pop3/imap/smtp proxy server运行时的核心模块 ( 不在我们本次研究范围内 )
  * *event* : nginx 自身对事件处理逻辑的封装
  * *os* : nginx对各个平台抽象逻辑的封装
  * *misc* : nginx 的一些utils,定义了test和profiler的一些外围模块的逻辑
