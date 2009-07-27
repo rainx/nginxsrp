@@ -250,3 +250,13 @@ uintptr_t ngx_escape_html(u_char *dst, u_char *src, size_t size);
 
 }}}
 等对于http服务有帮助的宏和函数
+
+=== 内存分配相关 ===
+
+内存相关的操作主要在 os/unix/ngx_alloc.{h,c} 和  core/ngx_palloc.{h,c} 下
+
+其中 os/unix/ngx_alloc.{h,c} 封装了最基本的内存分配函数，是对c原有的malloc/free/memalign 等原有的函数的封装,对应的函数为：
+
+ngx_alloc 使用malloc分配内存空间
+ngx_calloc 使用malloc分配内存空间，并且将空间内容初始化为0
+ngx_memalign 返回基于一个指定的alignment大小的数值为对齐基数的空间
