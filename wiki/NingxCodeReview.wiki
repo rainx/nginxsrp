@@ -49,7 +49,7 @@ http://www.evanmiller.org/nginx-modules-guide.html
 
 === nginx 代码的目录结构 ===
 
-解开nginx的代码后，发现有如下的几个目录
+解开nginx的代码后，在src目录下发现有如下的几个目录
 
 {{{
 core  event  http  mail  misc  os
@@ -63,3 +63,10 @@ core  event  http  mail  misc  os
  * *event* : nginx 自身对事件处理逻辑的封装
  * *os* : nginx对各个平台抽象逻辑的封装
  * *misc* : nginx 的一些utils,定义了test和profiler的一些外围模块的逻辑
+
+
+为了方便了解整个结构， 我们在src目录下建立了一个子目录，叫做demo,然后根据每个章节内容的不同，分别在demo下建立子目录，存放一些学习时使用的代码,如我们目前的章节是学习基本的数据类型，所以建立basic_types子目录
+
+{{{
+rainx@rainx-laptop:~/land/nginx-0.7.61/src$ mkdir -p demo/basic_types/
+}}}
