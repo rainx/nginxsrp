@@ -260,3 +260,4 @@ uintptr_t ngx_escape_html(u_char *dst, u_char *src, size_t size);
 ngx_alloc 使用malloc分配内存空间
 ngx_calloc 使用malloc分配内存空间，并且将空间内容初始化为0
 ngx_memalign 返回基于一个指定的alignment大小的数值为对齐基数的空间
+ngx_free 对内存的释放操作
