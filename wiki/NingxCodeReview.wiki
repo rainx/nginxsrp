@@ -126,3 +126,41 @@ gcc -I ../../../objs/ -I ../../os/unix/ basic_types_int.c -o basic_types_int
 ./basic_types_int
 1000 + -1000 = 0
 }}}
+
+=== nginx字符串的数据类型的表示 ===
+
+nginx对c语言的字符串类型进行了简单的封装， *core/ngx_string.h/c* 里面包含这些封装的内容
+
+其中定义了 ngx_str_t ，ngx_keyval_t， ngx_variable_value_t
+
+这几个基础类型的定义如下
+
+{{{
+typedef struct {
+    size_t      len;
+    u_char     *data;
+} ngx_str_t;
+
+
+typedef struct {
+    ngx_str_t   key;
+    ngx_str_t   value;
+} ngx_keyval_t;
+
+
+typedef struct {
+    unsigned    len:28;
+
+    unsigned    valid:1;
+    unsigned    no_cacheable:1;
+    unsigned    not_found:1;
+    unsigned    escape:1;
+
+    u_char     *data;
+} ngx_variable_value_t;
+}}}
+
+可以看出 ngx_str_t 在原有的uchar* 的基础上加入的字符串长度的附加信息， 初始化使用ngx_string宏进行，他的定义为：
+{{{
+#define ngx_string(str)     { sizeof(str) - 1, (u_char *) str }
+}}}
