@@ -70,3 +70,59 @@ core  event  http  mail  misc  os
 {{{
 rainx@rainx-laptop:~/land/nginx-0.7.61/src$ mkdir -p demo/basic_types/
 }}}
+
+
+=== nginx简单的数据类型的表示 ===
+
+在 core/ngx_config.h 目录里面定义了基本的数据类型的映射，大部分都映射到c语言自身的数据类型
+
+{{{
+typedef intptr_t        ngx_int_t;
+typedef uintptr_t       ngx_uint_t;
+typedef intptr_t        ngx_flag_t;
+}}}
+
+其中 ngx_int_t, nginx_flag_t, 都映射为 intptr_t； ngx_uint_t映射为 uintptr_t
+
+这两个类型在/usr/include/stdint.h的定义为：
+
+{{{
+/* Types for `void *' pointers.  */
+#if __WORDSIZE == 64
+# ifndef __intptr_t_defined
+typedef long int		intptr_t;
+#  define __intptr_t_defined
+# endif
+typedef unsigned long int	uintptr_t;
+#else
+# ifndef __intptr_t_defined
+typedef int			intptr_t;
+#  define __intptr_t_defined
+# endif
+typedef unsigned int		uintptr_t;
+#endif
+}}}
+
+所以基本的操作和整形/指针类型的操作类似
+
+建立文件
+{{{
+#include <stdio.h>
+#include "../../core/ngx_config.h"
+
+int main()
+{
+    ngx_uint_t a;
+    ngx_int_t b;
+    a = 1000;
+    b = -1000;
+    printf ("%d + %d = %d\n", a, b, a+b);
+    return 0;
+}
+}}}
+编译测试
+{{{
+gcc -I ../../../objs/ -I ../../os/unix/ basic_types_int.c -o basic_types_int
+./basic_types_int
+1000 + -1000 = 0
+}}}
