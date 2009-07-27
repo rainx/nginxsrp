@@ -191,7 +191,7 @@ int main()
     ngx_str_t mystr = ngx_string("hello, world !");
     int dst_len  =ngx_base64_encoded_length(mystr.len);
     printf("source length is %d, destination length is %d\n", mystr.len, dst_len );
-    p = malloc( ngx_base64_encoded_length(mystr.len));
+    p = malloc( ngx_base64_encoded_length(mystr.len)+1);
     dst.data = p;
     ngx_encode_base64(&dst, &mystr);
     printf("source str is %s\ndestination str is %s\n", mystr.data, dst.data);
@@ -208,5 +208,6 @@ gcc -o basic_types_str basic_types_str.o ../../../objs/src/core/ngx_{string,pall
 rainx@rainx-laptop:~/land/nginx-0.7.61/src/demo/basic_types$ ./basic_types_str 
 source length is 14, destination length is 20
 source str is hello, world !
-destination str is aGVsbG8sIHdvcmxkICE=
+destination str is aGVsbG8sIHdvcmxkICE=
+
 }}}
