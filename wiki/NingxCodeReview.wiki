@@ -342,3 +342,59 @@ ngx_int_t ngx_pfree(ngx_pool_t *pool, void *p);
 ngx_pool_cleanup_t *ngx_pool_cleanup_add(ngx_pool_t *p, size_t size);
 }}}
 这个过程和我们之前经常使用的有些区别， 他首先在传入的内存池中分配这个结构的空间（包括data段）， 然后将为结构体分配的空间返回， 通过操作返回的ngx_pool_cleanup_t结构来添加回叫的实现。 (*这个过程在nginx里面出现的比较多，也就是 xxxx_add 操作通常不是实际的添加操作，而是分配空间并返回一个指针，后续我们还要通过操作指针指向的空间来实现所谓的add*)
+
+下面是内存操作的一些例子
+demo/basic_types/mem_op.c
+{{{ 
+#include <stdio.h>
+#include "ngx_config.h"
+#include "ngx_conf_file.h"
+#include "nginx.h"
+#include "ngx_core.h"
+#include "ngx_string.h"
+#include "ngx_palloc.h"
+
+volatile ngx_cycle_t  *ngx_cycle;
+
+void
+ngx_log_error_core(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
+            const char *fmt, ...)
+{
+}
+
+typedef struct example_s {
+    int a;
+    char* b;
+} example_t;
+
+int main()
+{
+    ngx_pool_t *pool;
+    example_t* exp;
+    char* s;
+
+    pool = ngx_create_pool(5000, NULL);
+    printf("available pool regular pool free size is %d now\n", (ngx_uint_t) (pool->d.end - pool->d.last));
+    exp = ngx_palloc(pool, sizeof(example_t)) ;
+    s = ngx_palloc(pool, sizeof("hello,world"));
+    printf("available pool regular pool free size is %d now\n", (ngx_uint_t) (pool->d.end - pool->d.last));
+    exp->a = 1;
+    exp->b = s;
+    strcpy(s, "hello,world");
+    printf("pool max is %d\n", pool->max);
+    printf("exp->a is %d, exp->b is %s\n", exp->a, exp->b);
+    ngx_destroy_pool(pool);
+    return 0;
+}
+}}}
+
+编译运行结果
+{{{
+gcc  -c -O -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Wunused-function -Wunused-variable -Wunused-value -Werror -g -I ../../../objs/ -I ../../os/unix/ mem_op.c -I../../core/ -I../../event/ -I../../os/ -o mem_op.o
+ gcc -o mem_op mem_op.o ../../../objs/src/core/ngx_{string,palloc}.o ../../../objs/src/os/unix/ngx_alloc.o -lcrypt -lpcre -lcrypto -lz
+rainx@rainx-laptop:~/land/nginx-0.7.61/src/demo/basic_types$ ./mem_op 
+available pool regular pool free size is 4960 now
+available pool regular pool free size is 4940 now
+pool max is 4960
+exp->a is 1, exp->b is hello,world
+}}}
