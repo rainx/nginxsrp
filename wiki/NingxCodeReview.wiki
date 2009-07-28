@@ -293,4 +293,41 @@ typedef struct ngx_chain_s       ngx_chain_t;
 
 http://farm3.static.flickr.com/2435/3765612584_e184174353_o.png
 
-from : http://www.flickr.com/photos/rainx/3765612584/sizes/o/
+link : http://www.flickr.com/photos/rainx/3765612584/sizes/o/
+
+下面解释一下主要的几个操作：
+
+{{{
+// 创建内存池
+ngx_pool_t *ngx_create_pool(size_t size, ngx_log_t *log);
+}}}
+
+大致的过程是创建使用 ngx_alloc 分配一个size大小的空间, 然后将 ngx_pool_t* 指向这个空间， 并且初始化里面的成员, 其中 
+{{{
+p->d.last = (u_char *) p + sizeof(ngx_pool_t); // 初始指向 ngx_pool_t 结构体后面
+p->d.end = (u_char *) p + size; // 整个结构的结尾后面
+p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL; // 最大不超过 NGX_MAX_ALLOC_FROM_POOL,也就是getpagesize()-1 大小
+}}}
+其他大都设置为null或者0
+
+{{{
+// 销毁内存池
+void ngx_destroy_pool(ngx_pool_t *pool);
+}}}
+遍历链表，所有释放内存
+
+{{{
+// 重置内存池
+void ngx_reset_pool(ngx_pool_t *pool);
+}}}
+释放所有large段内存， 并且将d->last指针重新指向 ngx_pool_t 结构之后（和创建时一样）
+
+{{{
+// 从内存池里分配内存
+void *ngx_palloc(ngx_pool_t *pool, size_t size);
+void *ngx_pnalloc(ngx_pool_t *pool, size_t size);
+void *ngx_pcalloc(ngx_pool_t *pool, size_t size);
+void *ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment);
+}}}
+
+过程一般为，首先判断待分配的内存是否大于 pool->max的大小，如果大于则使用 ngx_palloc_large 在 large 链表里分配一段内存并返回， 如果小于测尝试从链表的 pool->current 开始遍历链表，尝试找出一个可以分配的内存，当链表里的任何一个节点都无法分配内存的时候，就调用 ngx_palloc_block 生成链表里一个新的节点， 并在新的节点里分配内存并返回， 同时， 还会将pool->current 指针指向新的位置（从链表里面pool->d.failed小于等于4的节点里找出）
