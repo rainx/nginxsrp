@@ -302,7 +302,7 @@ link : http://www.flickr.com/photos/rainx/3765612584/sizes/o/
 ngx_pool_t *ngx_create_pool(size_t size, ngx_log_t *log);
 }}}
 
-大致的过程是创建使用 ngx_alloc 分配一个size大小的空间, 然后将 ngx_pool_t* 指向这个空间， 并且初始化里面的成员, 其中 
+大致的过程是创建使用 ngx_alloc 分配一个size大小的空间, 然后将 `ngx_pool_t*` 指向这个空间， 并且初始化里面的成员, 其中 
 {{{
 p->d.last = (u_char *) p + sizeof(ngx_pool_t); // 初始指向 ngx_pool_t 结构体后面
 p->d.end = (u_char *) p + size; // 整个结构的结尾后面
