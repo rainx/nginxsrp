@@ -443,3 +443,78 @@ void *ngx_array_push_n(ngx_array_t *a, ngx_uint_t n);　//返回ｎ个元素的�
  # 首先判断　nalloc是否和nelts相等，即数组预先分配的空间已经满了，如果没满则计算地址直接返回指针
  # 如果已经满了则先判断是否我们的pool中的当前链表节点还有剩余的空间，如果有则直接在当前的pool链表节点中分配内存，并返回
  # 如果当前链表节点没有足够的空间则使用ngx_palloc重新分配一个2倍于之前数组空间大小的数组，然后将数据转移过来，并返回新地址的指针
+
+下面是一个array的例子:
+
+demo/basic_types/array_and_hash.c
+{{{
+#include <stdio.h>
+#include "ngx_config.h"
+#include "ngx_conf_file.h"
+#include "nginx.h"
+#include "ngx_core.h"
+#include "ngx_string.h"
+#include "ngx_palloc.h"
+#include "ngx_array.h"
+
+volatile ngx_cycle_t  *ngx_cycle;
+
+void
+ngx_log_error_core(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
+            const char *fmt, ...)
+{
+}
+
+int main()
+{
+   ngx_pool_t* pool;
+   ngx_array_t* arr;
+   int n;
+   int* ele;
+   pool = ngx_create_pool(4000, NULL);
+   arr = ngx_array_create(pool, 10, sizeof(ngx_uint_t));
+   for (n=0; n < 5; n++) {
+      ele = (int*) ngx_array_push(arr);
+      *ele = n;
+      printf("new element %d added\n", n);
+   }
+
+   printf("arr->nelts is %d, arr->nalloc = %d\n", arr->nelts, arr->nalloc);
+
+   for (n=5; n < 15; n++) {
+      ele = (int*) ngx_array_push(arr);
+      *ele = n;
+      printf("new element %d added\n", n);
+   }
+   printf("arr->nelts is %d, arr->nalloc = %d\n", arr->nelts, arr->nalloc);
+
+   ngx_array_destroy(arr);
+   ngx_destroy_pool(pool);
+   return 0;
+}
+}}}
+
+编译运行
+
+{{{
+gcc  -c -O -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Wunused-function -Wunused-variable -Wunused-value -Werror -g -I ../../../objs/ -I ../../os/unix array_and_hash.c -I../../core/ -I../../event/ -I../../os/ -o array_and_hash.o
+gcc -o array_and_hash array_and_hash.o ../../../objs/src/core/ngx_{string,palloc,array}.o ../../../objs/src/os/unix/ngx_alloc.o -lcrypt -lpcre -lcrypto -lz
+rainx@rainx-laptop:~/land/nginx-0.7.61/src/demo/basic_types$ ./array_and_hash 
+new element 0 added
+new element 1 added
+new element 2 added
+new element 3 added
+new element 4 added
+arr->nelts is 5, arr->nalloc = 10
+new element 5 added
+new element 6 added
+new element 7 added
+new element 8 added
+new element 9 added
+new element 10 added
+new element 11 added
+new element 12 added
+new element 13 added
+new element 14 added
+arr->nelts is 15, arr->nalloc = 15
+}}}
