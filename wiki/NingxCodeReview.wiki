@@ -39,7 +39,7 @@ http://sysoev.ru/nginx/nginx-0.7.61.tar.gz
 
 = 参与人员 =
 
-徐景(rainx), 王晓哲(chaoslawful)
+徐景([http://rainx.cn rainx]), 王晓哲(chaoslawful)
 
 = 研究文档 =
 
