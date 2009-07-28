@@ -1,5 +1,7 @@
 #summary Ningx代码研究.
 
+<wiki:toc/>
+
 = 概述 =
 
 {{{ 
