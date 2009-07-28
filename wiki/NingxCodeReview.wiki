@@ -314,7 +314,7 @@ p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL; // �
 // 销毁内存池
 void ngx_destroy_pool(ngx_pool_t *pool);
 }}}
-遍历链表，所有释放内存
+遍历链表，所有释放内存，其中如果注册了clenup(也是一个链表结构）， 会一次调用clenup 的 handler 进行清理。
 
 {{{
 // 重置内存池
@@ -330,4 +330,10 @@ void *ngx_pcalloc(ngx_pool_t *pool, size_t size);
 void *ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment);
 }}}
 
-过程一般为，首先判断待分配的内存是否大于 pool->max的大小，如果大于则使用 ngx_palloc_large 在 large 链表里分配一段内存并返回， 如果小于测尝试从链表的 pool->current 开始遍历链表，尝试找出一个可以分配的内存，当链表里的任何一个节点都无法分配内存的时候，就调用 ngx_palloc_block 生成链表里一个新的节点， 并在新的节点里分配内存并返回， 同时， 还会将pool->current 指针指向新的位置（从链表里面pool->d.failed小于等于4的节点里找出）
+ngx_palloc的过程一般为，首先判断待分配的内存是否大于 pool->max的大小，如果大于则使用 ngx_palloc_large 在 large 链表里分配一段内存并返回， 如果小于测尝试从链表的 pool->current 开始遍历链表，尝试找出一个可以分配的内存，当链表里的任何一个节点都无法分配内存的时候，就调用 ngx_palloc_block 生成链表里一个新的节点， 并在新的节点里分配内存并返回， 同时， 还会将pool->current 指针指向新的位置（从链表里面pool->d.failed小于等于4的节点里找出） ，其他几个函数也基本上为 ngx_palloc 的变种，实现方式大同小异
+
+{{{
+// 释放指定的内存
+ngx_int_t ngx_pfree(ngx_pool_t *pool, void *p);
+}}}
+这个操作只有在内存在large链表里注册的内存在会被真正释放，如果分配的是普通的内存，则会在destory_pool的时候统一释放.
