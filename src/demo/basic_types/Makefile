@@ -1,38 +1,73 @@
-all:  basic_types_int basic_types_str mem_op array_and_hash
+TARGETS := mem_cleanup \
+			basic_types_int \
+			basic_types_str \
+			mem_op \
+			array_and_hash \
+			file_cleanup
+NGX_ROOT := ../../nginx-0.7.61
+CC := gcc
+CXX := g++
+CFLAGS := -g3 -O0 -Wall
+CXXFLAGS := -g3 -O0 -Wall
+INCS := -I. \
+		-I$(NGX_ROOT)/src/core \
+		-I$(NGX_ROOT)/src/event \
+		-I$(NGX_ROOT)/src/event/modules \
+		-I$(NGX_ROOT)/src/os/unix \
+		-I$(NGX_ROOT)/objs \
+		-I$(NGX_ROOT)/src/http \
+		-I$(NGX_ROOT)/src/http/modules
+LDFLAGS :=
+LIBS := -lcrypt -lpcre -lcrypto -lz
 
-C_OPT=-c -O -pipe  -O -W -Wall -Wpointer-arith -Wno-unused-parameter -Wunused-function -Wunused-variable -Wunused-value -Werror -g -I ../../nginx-0.7.61/objs/ -I ../../nginx-0.7.61/src/os/unix/  -I../../nginx-0.7.61/src/core -I../../nginx-0.7.61/src/event -I../../nginx-0.7.61/src/os
+all: $(TARGETS)
 
-L_OPT= -lcrypt -lpcre -lcrypto -lz
-
-OBJS=basic_types_int.o \
-	 basic_types_str.o \
-     mem_op.o \
-     array_and_hash.o 
-
-
-TARGETS=basic_types_int \
-		basic_types_str \
-		mem_op \
-		array_and_hash
-
-NGX_OBJ_BASE=../../nginx-0.7.61/objs/src
-
-basic_types_int: basic_types_int.c
-	gcc $(C_OPT) basic_types_int.c -o basic_types_int.o ;\
-	gcc $(L_OPT) basic_types_int.o -o basic_types_int
-
-basic_types_str: basic_types_str.c
-	gcc $(C_OPT) basic_types_str.c -o basic_types_str.o ;\
-	gcc $(L_OPT) $(NGX_OBJ_BASE)/core/ngx_string.o $(NGX_OBJ_BASE)/core/ngx_palloc.o ../../nginx-0.7.61/objs/src/os/unix/ngx_alloc.o  basic_types_str.o -o basic_types_str
-
-mem_op: mem_op.c
-	gcc $(C_OPT) mem_op.c -o mem_op.o ;\
-	gcc $(L_OPT) $(NGX_OBJ_BASE)/core/ngx_string.o $(NGX_OBJ_BASE)/core/ngx_palloc.o ../../nginx-0.7.61/objs/src/os/unix/ngx_alloc.o  mem_op.o -o mem_op
-
-array_and_hash: array_and_hash.c
-	gcc $(C_OPT) array_and_hash.c -o array_and_hash.o ;\
-	gcc $(L_OPT) $(NGX_OBJ_BASE)/core/ngx_string.o $(NGX_OBJ_BASE)/core/ngx_palloc.o $(NGX_OBJ_BASE)/core/ngx_array.o ../../nginx-0.7.61/objs/src/os/unix/ngx_alloc.o  array_and_hash.o -o array_and_hash
-
+valgrind: $(TARGETS)
+	for prog in $(TARGETS); do \
+		valgrind --tool=memcheck --leak-check=full ./$$prog; \
+	done
 
 clean:
-	rm -rf $(OBJS) $(TARGETS)
+	rm -f $(TARGETS) *.o
+
+.PHONY: all clean valgrind
+
+mem_cleanup: mem_cleanup.cc
+	$(CXX) -c $(CFLAGS) $(INCS) $^
+	$(CC) $(patsubst %.cc,%.o,$^) \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS) -lstdc++
+
+file_cleanup: file_cleanup.cc
+	$(CXX) -c $(CFLAGS) $(INCS) $^
+	$(CC) $(patsubst %.cc,%.o,$^) \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS) -lstdc++
+
+basic_types_int: basic_types_int.c
+	$(CC) $(CFLAGS) $(INCS) $^ -o $@ $(LDFLAGS) $(LIBS)
+
+basic_types_str: basic_types_str.c
+	$(CC) $(CFLAGS) $(INCS) $^ \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/core/ngx_string.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS)
+
+mem_op: mem_op.c
+	$(CC) $(CFLAGS) $(INCS) $^ \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/core/ngx_string.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS)
+
+array_and_hash: array_and_hash.c
+	$(CC) $(CFLAGS) $(INCS) $^ \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/core/ngx_string.o \
+		$(NGX_ROOT)/objs/src/core/ngx_array.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS)
+

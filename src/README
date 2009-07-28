@@ -1,0 +1,4 @@
+* Demo usage:
+1. cd nginx-0.7.61/; ./configure; make CFLAGS="-g3 -O0 -Wall"
+2. cd ../demo; make
+
