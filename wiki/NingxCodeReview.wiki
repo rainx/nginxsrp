@@ -337,3 +337,8 @@ ngx_palloc的过程一般为，首先判断待分配的内存是否大于 pool->
 ngx_int_t ngx_pfree(ngx_pool_t *pool, void *p);
 }}}
 这个操作只有在内存在large链表里注册的内存在会被真正释放，如果分配的是普通的内存，则会在destory_pool的时候统一释放.
+{{{
+// 注册cleanup回叫函数（结构体）
+ngx_pool_cleanup_t *ngx_pool_cleanup_add(ngx_pool_t *p, size_t size);
+}}}
+这个过程和我们之前经常使用的有些区别， 他首先在传入的内存池中分配这个结构的空间（包括data段）， 然后将为结构体分配的空间返回， 通过操作返回的ngx_pool_cleanup_t结构来添加回叫的实现。 (*这个过程在nginx里面出现的比较多，也就是 xxxx_add 操作通常不是实际的添加操作，而是分配空间并返回一个指针，后续我们还要通过操作指针指向的空间来实现所谓的add*)
