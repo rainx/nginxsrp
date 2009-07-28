@@ -39,8 +39,8 @@ http://sysoev.ru/nginx/nginx-0.7.61.tar.gz
 
 = 参与人员 =
 
-徐景(rainx), 王晓哲(chaoslawful), 薛凯 (kaixue) , 候波林 (bolin)
- 
+徐景(rainx), 王晓哲(chaoslawful)
+
 = 研究文档 =
 
 == 学习emiller的文章 ==
