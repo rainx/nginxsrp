@@ -36,17 +36,16 @@ int main()
     yahoo_guy_t*    guy; 
     ngx_queue_t*    q;
     yahoo_t*        yahoo;
-    pool            = ngx_create_pool(1024*10, NULL);
+    pool            = ngx_create_pool(1024*10, NULL); //初始化内存池
     int             i;
     // 构建队列
     const ngx_str_t   names[] = {
         ngx_string("rainx"), ngx_string("xiaozhe"), ngx_string("zhoujian")
     } ;
-
     const int       ids[]   = {4611, 8322, 6111};
 
 	yahoo = ngx_palloc(pool, sizeof(yahoo_t));
-    ngx_queue_init(&yahoo->queue);
+    ngx_queue_init(&yahoo->queue); //初始化queue
 
     for(i = 0; i < 3; i++)
     {
