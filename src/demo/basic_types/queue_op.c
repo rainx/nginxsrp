@@ -68,6 +68,13 @@ int main()
         printf("No. %d guy in yahoo is %s \n", guy->id, guy->name);
     }
 
+	// 找到位于队列中间(若队列有奇数个元素就是正中间，若有偶数个元素则为后半部分的首个元素)的元素输出
+	{
+		ngx_queue_t *m = ngx_queue_middle(&yahoo->queue);
+		guy = ngx_queue_data(m, yahoo_guy_t, queue);
+		printf("Middle man: ID: %d, Name: %s\n", guy->id, guy->name);
+	}
+	
     // 排序从头部输出
     ngx_queue_sort(&yahoo->queue, yahoo_no_cmp);
     printf("sorting....\n");
@@ -79,6 +86,13 @@ int main()
         printf("No. %d guy in yahoo is %s \n", guy->id, guy->name);
     }
     
+	// 找到位于队列中间(若队列有奇数个元素就是正中间，若有偶数个元素则为后半部分的首个元素)的元素输出
+	{
+		ngx_queue_t *m = ngx_queue_middle(&yahoo->queue);
+		guy = ngx_queue_data(m, yahoo_guy_t, queue);
+		printf("Middle man: ID: %d, Name: %s\n", guy->id, guy->name);
+	}
+	
     ngx_destroy_pool(pool);
     return 0;
 }
