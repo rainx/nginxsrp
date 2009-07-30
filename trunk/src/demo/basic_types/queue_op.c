@@ -32,12 +32,13 @@ int main()
     pool            = ngx_create_pool(1024*10, NULL);
     int             i;
     // 构建队列
-    const ngx_str_t   names[] = {
+    ngx_str_t   names[] = {
         ngx_string("rainx"), ngx_string("xiaozhe"), ngx_string("zhoujian")
     } ;
 
     const int       ids[]   = {4611, 8322, 6111};
 
+	yahoo = ngx_palloc(pool, sizeof(yahoo_t));
     ngx_queue_init(&yahoo->queue);
 
     for(i = 0; i < 3; i++)
