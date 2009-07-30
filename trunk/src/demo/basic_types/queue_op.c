@@ -32,7 +32,7 @@ int main()
     pool            = ngx_create_pool(1024*10, NULL);
     int             i;
     // 构建队列
-    ngx_str_t   names[] = {
+    const ngx_str_t   names[] = {
         ngx_string("rainx"), ngx_string("xiaozhe"), ngx_string("zhoujian")
     } ;
 

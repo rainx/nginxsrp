@@ -8,8 +8,8 @@ TARGETS := mem_cleanup \
 NGX_ROOT := ../../nginx-0.7.61
 CC := gcc
 CXX := g++
-CFLAGS := -g3 -O0 -Wall
-CXXFLAGS := -g3 -O0 -Wall
+CFLAGS := -g3 -O2 -Wall -Werror
+CXXFLAGS := -g3 -O2 -Wall -Werror
 INCS := -I. \
 		-I$(NGX_ROOT)/src/core \
 		-I$(NGX_ROOT)/src/event \
