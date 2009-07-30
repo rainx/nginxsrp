@@ -633,3 +633,15 @@ int main()
 }
 
 }}}
+
+运行结果为
+{{{
+rainx@rainx-laptop:~/land/nginxsrp/src/demo/basic_types$ ./queue_op 
+No. 4611 guy in yahoo is rainx 
+No. 8322 guy in yahoo is xiaozhe 
+No. 6111 guy in yahoo is zhoujian 
+sorting....
+No. 8322 guy in yahoo is xiaozhe 
+No. 6111 guy in yahoo is zhoujian 
+No. 4611 guy in yahoo is rainx 
+}}}
