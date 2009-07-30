@@ -11,8 +11,6 @@ volatile ngx_cycle_t  *ngx_cycle;
 void ngx_log_error_core(ngx_uint_t level, ngx_log_t *log, ngx_err_t err, const char *fmt, ...) { }
 
 // 用雅虎的成员列表作为一个简单的例子
-
-
 typedef struct yahoo_s {
     ngx_queue_t   queue;
 } yahoo_t;
@@ -22,6 +20,15 @@ typedef struct yahoo_guy_s {
     u_char*       name;
     ngx_queue_t   queue; 
 } yahoo_guy_t;
+
+// 排序使用的比较函数, 按照id的大小排序，id大放到到前面
+ngx_int_t yahoo_no_cmp(const ngx_queue_t* p, const ngx_queue_t* n)
+{
+    yahoo_guy_t *pre, *next;
+    pre  = (yahoo_guy_t*) ngx_queue_data(p, yahoo_guy_t, queue);
+    next = (yahoo_guy_t*) ngx_queue_data(n, yahoo_guy_t, queue);
+    return ((pre->id > next->id) ? 1:0);
+}
 
 int main()
 {
@@ -61,8 +68,18 @@ int main()
         guy = ngx_queue_data(q, yahoo_guy_t, queue);
         printf("No. %d guy in yahoo is %s \n", guy->id, guy->name);
     }
+
+    // 排序从头部输出
+    ngx_queue_sort(&yahoo->queue, yahoo_no_cmp);
+    printf("sorting....\n");
+    for(q = ngx_queue_prev(&yahoo->queue); 
+        q != ngx_queue_sentinel(&yahoo->queue); 
+        q = ngx_queue_last(q) ) {
+        
+        guy = ngx_queue_data(q, yahoo_guy_t, queue);
+        printf("No. %d guy in yahoo is %s \n", guy->id, guy->name);
+    }
     
     ngx_destroy_pool(pool);
     return 0;
 }
-
