@@ -3,7 +3,8 @@ TARGETS := mem_cleanup \
 			basic_types_str \
 			mem_op \
 			array_and_hash \
-			file_cleanup
+			file_cleanup \
+			queue_op
 NGX_ROOT := ../../nginx-0.7.61
 CC := gcc
 CXX := g++
@@ -68,6 +69,14 @@ array_and_hash: array_and_hash.c
 		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
 		$(NGX_ROOT)/objs/src/core/ngx_string.o \
 		$(NGX_ROOT)/objs/src/core/ngx_array.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS)
+
+queue_op: queue_op.c
+	$(CC) $(CFLAGS) $(INCS) $^ \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/core/ngx_string.o \
+		$(NGX_ROOT)/objs/src/core/ngx_queue.o \
 		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
 		-o $@ $(LDFLAGS) $(LIBS)
 
