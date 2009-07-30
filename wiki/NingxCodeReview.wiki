@@ -518,3 +518,118 @@ new element 13 added
 new element 14 added
 arr->nelts is 15, arr->nalloc = 15
 }}}
+
+==== ngx_queue ====
+
+ngx_queue.{c,h} 实现了一个队列的操作逻辑，队列的基本结构为一个双向队列
+
+基础的数据结构为
+{{{
+typedef struct ngx_queue_s  ngx_queue_t;
+
+struct ngx_queue_s {
+    ngx_queue_t  *prev;
+    ngx_queue_t  *next;
+};
+}}}
+
+注意nginx的队列操作和结构只进行指针的操作，不负责节点内容空间的分配和保存，所以在定义自己的队列节点的时候，需要自己定义数据结构以及分配空间， 并包含一个ngx_queue_t类型的成员, 需要获得原始的数据节点的时候需要使用ngx_queue_data宏
+
+{{{
+#define ngx_queue_data(q, type, link)                                         \
+    (type *) ((u_char *) q - offsetof(type, link))
+}}}
+
+另外，整个queue结构中包含一个 sentinel（哨兵） 节点， 他指向队列的头和尾
+
+http://farm3.static.flickr.com/2653/3771477738_68830e4816_o.png
+
+下面是一个queue操作的例子
+
+{{{
+#include <stdio.h>
+#include "ngx_config.h"
+#include "ngx_conf_file.h"
+#include "nginx.h"
+#include "ngx_core.h"
+#include "ngx_string.h"
+#include "ngx_palloc.h"
+#include "ngx_queue.h"
+
+volatile ngx_cycle_t  *ngx_cycle;
+void ngx_log_error_core(ngx_uint_t level, ngx_log_t *log, ngx_err_t err, const char *fmt, ...) { }
+
+// 用雅虎的成员列表作为一个简单的例子
+typedef struct yahoo_s {
+    ngx_queue_t   queue;
+} yahoo_t;
+
+typedef struct yahoo_guy_s {
+    ngx_uint_t    id;
+    u_char*       name;
+    ngx_queue_t   queue;
+} yahoo_guy_t;
+
+// 排序使用的比较函数, 按照id的大小排序，id大放到到前面
+ngx_int_t yahoo_no_cmp(const ngx_queue_t* p, const ngx_queue_t* n)
+{
+    yahoo_guy_t *pre, *next;
+    pre  = (yahoo_guy_t*) ngx_queue_data(p, yahoo_guy_t, queue);
+    next = (yahoo_guy_t*) ngx_queue_data(n, yahoo_guy_t, queue);
+    return ((pre->id > next->id) ? 1:0);
+}
+
+int main()
+{
+    ngx_pool_t*     pool;
+    yahoo_guy_t*    guy;
+    ngx_queue_t*    q;
+    yahoo_t*        yahoo;
+    pool            = ngx_create_pool(1024*10, NULL); //初始化内存池
+    int             i;
+    // 构建队列
+    const ngx_str_t   names[] = {
+        ngx_string("rainx"), ngx_string("xiaozhe"), ngx_string("zhoujian")
+    } ;
+    const int       ids[]   = {4611, 8322, 6111};
+
+    yahoo = ngx_palloc(pool, sizeof(yahoo_t));
+    ngx_queue_init(&yahoo->queue); //初始化queue
+
+    for(i = 0; i < 3; i++)
+    {
+      guy = (yahoo_guy_t*) ngx_palloc(pool, sizeof(yahoo_guy_t));
+      guy->id   = ids[i];
+      //guy->name = (char*) ngx_palloc(pool, (size_t) (strlen(names[i]) + 1) );
+      guy->name = (u_char*) ngx_pstrdup(pool, (ngx_str_t*) &(names[i]) );
+
+      ngx_queue_init(&guy->queue);
+      // 从头部进入队列
+      ngx_queue_insert_head(&yahoo->queue, &guy->queue);
+    }
+
+    // 从尾部遍历输出
+    for(q = ngx_queue_last(&yahoo->queue);
+        q != ngx_queue_sentinel(&yahoo->queue);
+        q = ngx_queue_prev(q) ) {
+
+        guy = ngx_queue_data(q, yahoo_guy_t, queue);
+        printf("No. %d guy in yahoo is %s \n", guy->id, guy->name);
+    }
+
+    // 排序从头部输出
+    ngx_queue_sort(&yahoo->queue, yahoo_no_cmp);
+    printf("sorting....\n");
+    for(q = ngx_queue_prev(&yahoo->queue);
+        q != ngx_queue_sentinel(&yahoo->queue);
+        q = ngx_queue_last(q) ) {
+
+        guy = ngx_queue_data(q, yahoo_guy_t, queue);
+        printf("No. %d guy in yahoo is %s \n", guy->id, guy->name);
+    }
+
+    ngx_destroy_pool(pool);
+    return 0;
+}
+
+}}}
