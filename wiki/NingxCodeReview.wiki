@@ -645,3 +645,16 @@ No. 8322 guy in yahoo is xiaozhe
 No. 6111 guy in yahoo is zhoujian 
 No. 4611 guy in yahoo is rainx 
 }}}
+
+==== ngx_hash ====
+
+ngx_hash.{c|h} 实现了nginx里面比较重要的一个hash结构， 这个在模块配置解析里经常被用到， 虽然代码理解起来比较混乱，但是使用还是比较简单的，常用的有创建 hash 和 在hash中进行查找两个操作，对于创建hash的操作,过程一般为：
+
+ # 构造一个 ngx_hash_key_t 为成员的数组， 包含 key, value 和 使用key计算出的一个hash值
+ # 构建一个 ngx_hash_init_t结构体的变量， 其中包含了ngx_hash_t 的成员， 为hash的结构体， 还包括一些其他初始设置，如bucket的大小，内存池等
+ # 调用 ngx_hash_init 传入 ngx_hash_init_t 结构， ngx_hash_key_t 的数组，和数组的长度， 进行初始化，这样 ngx_hash_init_t的hash成员就是我们要的hash结构
+
+查找的过程很简单
+ 
+ # 计算 key 的hash值 
+ # 使用 ngx_hash_find 进行查找，需要同时传入 hash值和key ,返回的就是value的指针
