@@ -62,7 +62,6 @@ int main()
     }
 
     // 查找
-    find = (char*) ngx_palloc(pool, sizeof(ngx_hash_key_t));
     k    = ngx_hash_key_lc(names[0].data, names[0].len);
     printf("%s key is %d\n", names[0].data, k);
     find = (char*) 
