@@ -405,7 +405,8 @@ exp->a is 1, exp->b is hello,world
 ==== ngx_array ====
 
 对应的文件为 core/ngx_array.{c|h} 
-ngx_array是nginx内部封装的使用 ngx_pool_t对内存池进行分配的数组容器
+
+ngx_array是nginx内部封装的使用 ngx_pool_t对内存池进行分配的数组容器，其中的数据是在一整片内存区中连续存放的。更新数组时只能在尾部压入1个或多个元素。
 
 数组的实现结构为
 {{{
