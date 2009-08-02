@@ -649,7 +649,15 @@ No. 4611 guy in yahoo is rainx
 
 ==== ngx_hash ====
 
-ngx_hash.{c|h} 实现了nginx里面比较重要的一个hash结构， 这个在模块配置解析里经常被用到， 虽然代码理解起来比较混乱，但是使用还是比较简单的，常用的有创建 hash 和 在hash中进行查找两个操作，对于创建hash的操作,过程一般为：
+ngx_hash.{c|h} 实现了nginx里面比较重要的一个hash结构， 这个在模块配置解析里经常被用到。该 hash 结构是只读的，即仅在初始创建时可以给出保存在其中的 key-val 对，其后就只能查询而不能进行增删改操作了。
+
+下面是简单 hash 结构的内存布局：
+
+http://farm3.static.flickr.com/2619/3780810336_c28426b7d2_o.png
+
+link: http://www.flickr.com/photos/chaoslawful/3780810336/sizes/o/
+
+虽然代码理解起来比较混乱，但是使用还是比较简单的，常用的有创建 hash 和在 hash 中进行查找两个操作，对于创建hash的操作,过程一般为：
 
  # 构造一个 ngx_hash_key_t 为成员的数组， 包含 key, value 和 使用key计算出的一个hash值
  # 构建一个 ngx_hash_init_t结构体的变量， 其中包含了ngx_hash_t 的成员， 为hash的结构体， 还包括一些其他初始设置，如bucket的大小，内存池等
@@ -659,6 +667,8 @@ ngx_hash.{c|h} 实现了nginx里面比较重要的一个hash结构， 这个在�
  
  # 计算 key 的hash值 
  # 使用 ngx_hash_find 进行查找，需要同时传入 hash值和key ,返回的就是value的指针
+
+需要注意的是，nginx 的 hash 在查找时使用的是分桶后线性查找法，因此当分桶数确定时查找效率同其中的总 key-val 对数量成反比。
 
 下面是一些demo代码(可以从svn中找到)
 {{{
