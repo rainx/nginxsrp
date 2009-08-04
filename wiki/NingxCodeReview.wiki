@@ -789,3 +789,15 @@ ngx_list 的结构并不复杂，ngx为我们封装了ngx_list_create, ngx_list_
  
    }
 }}}
+
+
+== 了解nginx的core module 的结构和运行机制 ==
+
+=== 参考资料 === 
+
+在开始这个task的学习的时候，经过搜索发现了langwan同学之前对nginx的源代码研究资料，很有参考意义，所以大量节省了我们的工作，我觉得对于本章的进行比较有用的是，下面这几个文章
+
+ # nginx源代码分析 http://hi.baidu.com/langwan/blog/item/6b18ef24cd859e064c088d28.html
+ # nginx 缓冲区构造 http://hi.baidu.com/langwan/blog/item/822b758d5d1d9a1ab31bbaf8.html
+ # Nginx源代码分析 - 日志处理 http://hi.baidu.com/langwan/blog/item/7e7db51978e04e4d43a9ad32.html
+
