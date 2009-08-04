@@ -818,4 +818,4 @@ error_log  logs/error.log  debug;
 
 打开debug信息的支持，并使用2个worker进程，通过查看 log 信息来了解 nginx 运行的情况
 
-基于上面的配置信息，结合一个简单的http访问操作，我这里记录了一个 [ NginxCodeReviewErrorLogDemo | log日志的例子 ]
+基于上面的配置信息，结合一个简单的http访问操作，我这里记录了一个 [NginxCodeReviewErrorLogDemo log日志的例子 ]
