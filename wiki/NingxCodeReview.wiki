@@ -763,3 +763,29 @@ rainx key is 108275556
 get desc of rainx: rainx's id is 1
 
 }}}
+
+
+==== ngx_list ====
+
+ngx_list 的结构并不复杂，ngx为我们封装了ngx_list_create, ngx_list_init, 和 ngx_list_push等(建立，初始化，添加）操作， 但是对于我们来说最常用的是遍历操作， 下面是nginx的注释里面提到的遍历的例子
+
+{{{
+   part = &list.part;
+   data = part->elts;
+ 
+   for (i = 0 ;; i++) {
+ 
+       if (i >= part->nelts) {
+           if (part->next == NULL) {
+               break;
+           }
+ 
+           part = part->next;
+           data = part->elts;
+           i = 0;
+       }
+ 
+       ...  data[i] ...
+ 
+   }
+}}}
