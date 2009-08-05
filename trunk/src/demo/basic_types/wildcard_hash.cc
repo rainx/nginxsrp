@@ -96,13 +96,15 @@ int main()
 
 	// 初始化用键值对，注意用于初始化 ngx_hash_wildcard_t 散列表的 value 指针必须是至少对齐在 4 字节边界上的
 	// 否则使用时可能产生错误。因为 ngx_hash_wildcard_init() 会将 value 指针值的最低 2 位用作标志位。
+	// 另外初始化的 key 必须是按字符串增序排序的，因为 ngx_hash_wildcard_init() 是从前向后顺序扫描层级关系的。
+	// key 中除了小数点'.'字符作为层级分隔符之外，其他字符都作为普通字符看待。
 	ngx_hash_key_t props[] = {
 		{ngx_string("a"), 0, NULL},
-		{ngx_string("a.b"), 0, NULL},
+		{ngx_string("a.b*"), 0, NULL},
 		{ngx_string("a.c.d.e"), 0, NULL},
 		{ngx_string("b."), 0, NULL},
-		{ngx_string("c."), 0, NULL},
-		{ngx_string("c.a."), 0, NULL}
+		{ngx_string("c*."), 0, NULL},
+		{ngx_string("c*.a."), 0, NULL}
 	};
 	props[0].value = ngx_pcalloc(p, (strlen(str[0])+1)); ngx_memcpy(props[0].value, str[0], strlen(str[0]));
 	props[1].value = ngx_pcalloc(p, (strlen(str[1])+1)); ngx_memcpy(props[1].value, str[1], strlen(str[1]));
