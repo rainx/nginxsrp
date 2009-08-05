@@ -5,12 +5,13 @@ TARGETS := mem_cleanup \
 			array_and_hash \
 			file_cleanup \
 			queue_op \
-			hash_op 
+			hash_op \
+			wildcard_hash
 NGX_ROOT := ../../nginx-0.7.61
 CC := gcc
 CXX := g++
-CFLAGS := -g3 -O2 -Wall -Werror
-CXXFLAGS := -g3 -O2 -Wall -Werror
+CFLAGS := -g3 -O0 -Wall -Werror
+CXXFLAGS := -g3 -O0 -Wall -Werror
 INCS := -I. \
 		-I$(NGX_ROOT)/src/core \
 		-I$(NGX_ROOT)/src/event \
@@ -48,6 +49,16 @@ file_cleanup: file_cleanup.cc
 		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
 		-o $@ $(LDFLAGS) $(LIBS) -lstdc++
 
+wildcard_hash: wildcard_hash.cc
+	$(CXX) -c $(CFLAGS) $(INCS) $^
+	$(CC) $(patsubst %.cc,%.o,$^) \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/core/ngx_string.o \
+		$(NGX_ROOT)/objs/src/core/ngx_hash.o \
+		$(NGX_ROOT)/objs/src/core/ngx_array.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS) -lstdc++
+
 basic_types_int: basic_types_int.c
 	$(CC) $(CFLAGS) $(INCS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
@@ -80,6 +91,7 @@ queue_op: queue_op.c
 		$(NGX_ROOT)/objs/src/core/ngx_queue.o \
 		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
 		-o $@ $(LDFLAGS) $(LIBS)
+
 hash_op: hash_op.c
 	$(CC) $(CFLAGS) $(INCS) $^ \
 		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
