@@ -37,12 +37,12 @@ int main()
     // hask key cal end
     //
     hash = (ngx_hash_t*) ngx_pcalloc(pool, sizeof(hash));
-    hash_init.hash      = hash;
-    hash_init.key       = &ngx_hash_key_lc;
-    hash_init.max_size  = 1024*10;
+    hash_init.hash      = hash;                      // hash结构
+    hash_init.key       = &ngx_hash_key_lc;          // hash算法函数
+    hash_init.max_size  = 1024*10;                   // max_size
     hash_init.bucket_size = 64; // ngx_align(64, ngx_cacheline_size);
-    hash_init.name      = "yahoo_guy_hash";
-    hash_init.pool           = pool;
+    hash_init.name      = "yahoo_guy_hash";          // 在log里会用到
+    hash_init.pool           = pool;                 // 内存池
     hash_init.temp_pool      = NULL;
 
     // 创建数组
