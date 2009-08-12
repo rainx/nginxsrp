@@ -1,6 +1,10 @@
 /*
     一个例子模块，简单的将http请求的内容返输出
-    V2 版本： 在handler里面使用 NGX_AGAIN 将请求分段处理
+    V2 版本： 
+        在handler里面使用 NGX_AGAIN 将请求分段处理（
+            这个是一个失败的实验， 
+            因为最终发现 loc 的 handler里并不能使用NGX_AGAIN
+
     by RainX
 */
 
@@ -21,29 +25,44 @@ static void ngx_http_dump_request_headers(ngx_http_request_t* r);
 /*
     定义一个loc的上下文结构体，保存配置信息等
 */
-typedef struct ngx_http_echo_loc_conf_s {
-    ngx_int_t  echo_times;   /* echo要被显示的次数 */
-} ngx_http_echo_loc_conf_t;
+typedef struct ngx_http_echov2_loc_conf_s {
+    ngx_int_t  echo_times;      /* echo要被显示的次数 */
+} ngx_http_echov2_loc_conf_t;
 
+/*
+    定义一个request life cycle的结构体，用来保存per request的运行时状态等信息
+    保存在 r->ctx[index of our module] 中
+*/
+typedef struct ngx_http_echov2_request_ctx_s {
+    ngx_int_t       current_echo_times; /* 已经被显示的次数 */
+    enum {
+        NGX_ECHO_INIT = 0,
+        NGX_ECHO_READY,
+        NGX_ECHO_HEADER_SENT,
+        NGX_ECHO_BODY_SENDING,
+        NGX_ECHO_BODY_SENT
+    }               state;              /* handler处理的状态  */
+    ngx_str_t*      post_content;       /* 要发送的内容       */
+} ngx_http_echov2_request_ctx_t ;
 
-void ngx_http_echo_request_post_handler (ngx_http_request_t *r)
+void ngx_http_echov2_request_post_handler (ngx_http_request_t *r)
 { }
 
 /* 
     定义echo的conf文件指令集 
 */
 static ngx_command_t ngx_http_echo_commands[] = {
-    { ngx_string("echo"),      /* 设定echo的handler */
+    { ngx_string("echov2"),      /* 设定echo的handler */
       NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS,
       &ngx_conf_set_echo,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
-    { ngx_string("echo_times"), /* 设置echo的次数 */
+    { ngx_string("echov2_times"), /* 设置echo的次数 */
       NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_echo_loc_conf_t, echo_times),
+      offsetof(ngx_http_echov2_loc_conf_t, echo_times),
       NULL },
     ngx_null_command
 };
@@ -70,9 +89,9 @@ ngx_conf_set_echo(ngx_conf_t *cf, ngx_command_t *cmd, void* conf)
 static void* 
 ngx_http_echo_create_loc_conf(ngx_conf_t *cf)
 {
-    ngx_http_echo_loc_conf_t *conf;
+    ngx_http_echov2_loc_conf_t *conf;
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, cf->log, 0, "ngx_http_echo_create_loc_conf called - [rainx]");
-    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_echo_loc_conf_t));
+    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_echov2_loc_conf_t));
     if (conf == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -88,8 +107,8 @@ ngx_http_echo_create_loc_conf(ngx_conf_t *cf)
 static char* 
 ngx_http_echo_merge_loc_conf(ngx_conf_t* cf, void* parent, void* child)
 {
-    ngx_http_echo_loc_conf_t* prev = parent;
-    ngx_http_echo_loc_conf_t* conf = child;
+    ngx_http_echov2_loc_conf_t* prev = parent;
+    ngx_http_echov2_loc_conf_t* conf = child;
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, cf->log, 0, "ngx_http_echo_merge_loc_conf called - [rainx]");
     
     if (conf->echo_times == NGX_CONF_UNSET) {
@@ -120,7 +139,7 @@ static ngx_http_module_t ngx_http_echo_module_ctx = {
 /* 
  定义模块 
 */
-ngx_module_t ngx_http_echo_module = {
+ngx_module_t ngx_http_echov2_module = {
     NGX_MODULE_V1,
     &ngx_http_echo_module_ctx,      /* 模块的上下文 */ 
     ngx_http_echo_commands,        /* 模块的指令 */
@@ -142,60 +161,90 @@ ngx_module_t ngx_http_echo_module = {
 static ngx_int_t 
 ngx_http_echo_handler(ngx_http_request_t* r)
 {
-    ngx_http_echo_loc_conf_t*       echo_conf;
+    ngx_http_echov2_loc_conf_t*     echo_conf;
     ngx_chain_t                     out;
     ngx_int_t                       rc;
     ngx_buf_t*                      b;
     u_char*                         post_content = NULL;
     size_t                          post_content_len = 0;
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "ngx_http_echo_handler called - [rainx]");
-    echo_conf = ngx_http_get_module_loc_conf(r, ngx_http_echo_module);
-    
-    rc = ngx_http_read_client_request_body(r, ngx_http_echo_request_post_handler);
-
-    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
-        return rc;
+    ngx_http_echov2_request_ctx_t*  echo_ctx;
+    echo_conf = ngx_http_get_module_loc_conf(r, ngx_http_echov2_module);
+    // 我们模块运行时的上下文，如果没有的话，我们将进行初始化工作
+    echo_ctx  = (ngx_http_echov2_request_ctx_t*) ngx_http_get_module_ctx(r, ngx_http_echov2_module);
+    if (!echo_ctx){ //初始化
+        echo_ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_echov2_request_ctx_t)); 
+        /*
+            实际上calloc 已经把结构体里的数值设置为0 
+        */
+        echo_ctx->state = NGX_ECHO_INIT; 
+        echo_ctx->current_echo_times = 0;
+        echo_ctx->post_content = ngx_pcalloc(r->pool, sizeof(ngx_str_t));
     }
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, 
+            "ngx_http_echo_handler called[v2] - [rainx]\n"
+            "Dump of ngx_http_echov2_loc_conf_t current_echo_times=[%d],state=[%d]",
+            echo_ctx->current_echo_times,
+            echo_ctx->state
+            );
 
-    ngx_http_dump_request_headers(r);
-    post_content_len = ngx_http_dump_request_body(r, /* out */(void*) &post_content);
+    // 对运行状态进行判断，构造一个状态机，分阶段处理请求
+    switch (echo_ctx->state) {
+        case NGX_ECHO_INIT :  // 初始化
+            rc = ngx_http_read_client_request_body(r, ngx_http_echov2_request_post_handler);
+            if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+                return rc;
+            }
 
-    if (!(r->method &(NGX_HTTP_POST))) {
-        return NGX_HTTP_NOT_ALLOWED;
+            if (!(r->method &(NGX_HTTP_POST))) {
+                return NGX_HTTP_NOT_ALLOWED;
+            }
+
+            ngx_http_dump_request_headers(r);
+            // 将post_content的数值赋值给结构体
+            post_content_len = ngx_http_dump_request_body(r, /* out */(void*) &post_content);
+            echo_ctx->post_content->len = post_content_len;
+            echo_ctx->post_content->data = post_content;     
+
+            // 进入下一个状态
+            echo_ctx->state = NGX_ECHO_READY;
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, 
+             "ready to called again");
+            return NGX_AGAIN;
+            break;
+        case NGX_ECHO_READY : // 已经初始化完毕，可以进行header头的发送
+            //输出头
+            r->headers_out.content_type_len = sizeof("text/plain") - 1;
+            r->headers_out.content_type.len = sizeof("text/plain") - 1;
+            r->headers_out.content_type.data = (u_char *) "text/plain";
+            r->headers_out.status = NGX_HTTP_OK;
+            r->headers_out.content_length_n = echo_ctx->post_content->len;
+
+            rc = ngx_http_send_header(r);
+            if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
+                return rc;
+            }
+
+            // 进入下一个状态
+            echo_ctx->state = NGX_ECHO_HEADER_SENT;
+            return NGX_AGAIN;
+            break;
+        case NGX_ECHO_HEADER_SENT:
+            b = ngx_pcalloc(r->pool, sizeof(ngx_buf_t));
+            if (b == NULL) {
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+
+            out.buf     = b;
+            out.next    = NULL;
+            b->pos      = echo_ctx->post_content->data;
+            b->last     = echo_ctx->post_content->data + echo_ctx->post_content->len;
+            b->memory   = 1;
+            b->last_buf = 1;
+            return ngx_http_output_filter(r, &out);
+            break;
+        default:
+            return NGX_DONE;
     }
-
-    // 获取post data 
-
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "POST CONTENT LEN IS %d, DATA: %p - [rainx]",
-            post_content_len, post_content);
-    //输出头
-    r->headers_out.content_type_len = sizeof("text/plain") - 1;
-    r->headers_out.content_type.len = sizeof("text/plain") - 1;
-    r->headers_out.content_type.data = (u_char *) "text/plain";
-    r->headers_out.status = NGX_HTTP_OK;
-    r->headers_out.content_length_n = post_content_len;
-    
-    rc = ngx_http_send_header(r);
-
-    if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
-        return rc;
-    }
-
-    // 输出内容：
-
-    b = ngx_pcalloc(r->pool, sizeof(ngx_buf_t));
-    if (b == NULL) {
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    out.buf = b;
-    out.next = NULL;
-    b->pos = post_content;
-    b->last = post_content + post_content_len;
-    b->memory = 1;
-    b->last_buf = 1;
-
-    return ngx_http_output_filter(r, &out);
 }
 
 
