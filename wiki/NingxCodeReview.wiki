@@ -1,5 +1,4 @@
 #summary Ningx代码研究.
-#labels 所
 
 <wiki:toc/>
 
@@ -890,3 +889,19 @@ typedef enum {
 }}}
 
 每一个phase的handlers 都是一个数组，里面可以包含多个元素，通过 ngx_array_push 添加新的handler
+
+其中每个phase的处理大都包含了对ngx_request_t 的 write 或者 read event的改写，其中
+
+在 ngx_http_core_content_phase 里面， 有对location handler的调用， 其中的 r->content_handler 就是运行时刻从location handler中注册的，
+{{{
+    if (r->content_handler) {
+        r->write_event_handler = ngx_http_request_empty_handler;
+        ngx_http_finalize_request(r, r->content_handler(r)); /*实际的请求发送处理*/
+        return NGX_OK;
+    }
+}}}
+
+
+=== ngx_http_core_module.[c|h] ===
+
+对于 ngx_http_core_module 是http 模块中比较重要的模块， 他本身是一个 NGX_HTTP_MODULE （不同于ngx_http_module, ngx_http_module本质上是一个 NGX_CORE_MODULE
