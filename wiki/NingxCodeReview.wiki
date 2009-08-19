@@ -1,4 +1,5 @@
 #summary Ningx代码研究.
+#labels 所
 
 <wiki:toc/>
 
@@ -833,3 +834,9 @@ http://farm3.static.flickr.com/2484/3787983171_b75bd92001_o.png
 }}}
 
 另外，ngx_master/single_process_cycle 里面会对init_process进行调用，  并且循环调用 ngx_process_events_and_timers ， 其中里面会调用ngx_process_events(cycle, timer, flags); 对事件循环进行polliing  时间一般默认为 500 ms
+
+= 了解nginx的http [core] module 的结构和运行机制 =
+
+HTTP相关的Module都在 src/http 目录和其子目录下， 其中 src/http 下的文件为http模块的核心文件，  src/http/modules 下的文件为http模块的扩展模块。
+
+
