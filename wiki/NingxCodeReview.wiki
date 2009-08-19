@@ -957,3 +957,16 @@ ngx_http_init_connection 在 ngx_http_request.c中定义，后续会进行详细
 ngx_http_handler 所作的最核心的工作就是在最后调用 并将 write event 设置为 ngx_http_core_run_phases， 开始依次处理各个阶段的 handler 
 
 当handler处理完成后，http的处理流程也就基本上完成了.. 
+
+{{{
+    while (ph[r->phase_handler].checker) {
+
+        rc = ph[r->phase_handler].checker(r, &ph[r->phase_handler]);
+
+        if (rc == NGX_OK) {
+            return;
+        }
+    }
+}}}
+
+run_phases 的过程实际上非常简单， 一次的运行每一个handler, 当任意一个handler返回ok或者所有handler执行完成后，整个流程结束。
