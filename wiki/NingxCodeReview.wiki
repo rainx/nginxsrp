@@ -994,3 +994,12 @@ ngx_http_subrequest(ngx_http_request_t *r,
 {{{
     for (p = &r->main->posted_requests; *p; p = &(*p)->next) { /* void */ }
 }}}
+
+也就是说，一但调用了 ngx_http_subrequest 只后，subrequest已经已经注册到了nginx的事件循环中，和主循环并行进行处理，所以根据evan miller的文章里我们也可以看到，subrequest的串行处理是比较困难的。
+
+
+=== 关于 internal redirect ===
+
+nginx的 internal redirect 有两种方式， 一个是调用 ngx_http_internal_redirect 命令， 一个是使用 X-Accel-Redirect 头，其中
+
+=== 关于upstream ===
