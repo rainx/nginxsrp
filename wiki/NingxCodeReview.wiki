@@ -839,4 +839,21 @@ http://farm3.static.flickr.com/2484/3787983171_b75bd92001_o.png
 
 HTTP相关的Module都在 src/http 目录和其子目录下， 其中 src/http 下的文件为http模块的核心文件，  src/http/modules 下的文件为http模块的扩展模块。
 
+其中：
 
+=== ngx_http.[c|h] ===
+
+ngx_http.c 中，注册了 http 这个指令的处理模块，对应ngx_http_block函数 
+{{{
+static ngx_command_t  ngx_http_commands[] = {
+
+    { ngx_string("http"),
+      NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+      ngx_http_block,
+      0,
+      0,
+      NULL },
+
+      ngx_null_command
+};
+}}}
