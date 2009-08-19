@@ -1000,6 +1000,31 @@ ngx_http_subrequest(ngx_http_request_t *r,
 
 === 关于 internal redirect ===
 
-nginx的 internal redirect 有两种方式， 一个是调用 ngx_http_internal_redirect 命令， 一个是使用 X-Accel-Redirect 头，其中
+nginx的 internal redirect 有两种方式， 一个是调用 ngx_http_internal_redirect 命令， 一个是使用 X-Accel-Redirect 头，其中X-Accel-Redirect 头是交由upstream模块进行的， 在ngx_http_upstream_process_headers函数中，我们可以看到
+
+{{{
+   if (u->headers_in.x_accel_redirect
+        && !(u->conf->ignore_headers & NGX_HTTP_UPSTREAM_IGN_XA_REDIRECT))
+   {
+        .....
+        .....
+        ngx_http_internal_redirect(r, uri, &args);
+        return NGX_DONE;
+    }
+}}}
+
+也就是说，本质上，这两种方法都是通过 ngx_http_internal_redirect 的函数实现的，而ngx_http_internal_redirect 函数又做了些什么呢？
+
+{{{
+    r->internal = 1;
+
+    ngx_http_handler(r);
+
+    return NGX_DONE;
+}}}
+
+可以看到，其实它只是简单的修改request结构体，并通过 ngx_http_handler 重新进行http处理流程而已。
+
+关于internal redirect 和 subrequest,他们有类似的地方，都是在最后调用 ngx_http_handler 重新开始对request的处理，但是不同的地方我想主要是 subrequest会新建立一个request结构，原来的request处理并不会结束，而 internal redirect会结束当前的请求处理，使用嗯但前的request结构体来发起请求。
 
 === 关于upstream ===
