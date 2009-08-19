@@ -827,3 +827,9 @@ error_log  logs/error.log  debug;
 http://farm3.static.flickr.com/2484/3787983171_b75bd92001_o.png
 
 他主要做了如下几件事情:
+
+{{{
+初始化cycle是基于旧有的cycle进行的，比如这里的 init_cycle，会继承old cycle的很多属性， 比如log等， 但是同时会对很多资源重新分配,比如pool, shared mem, file handler, listening socket 等，同时清除旧有的cycle的资源 
+}}}
+
+另外，ngx_master/single_process_cycle 里面会对init_process进行调用，  并且循环调用 ngx_process_events_and_timers ， 其中里面会调用ngx_process_events(cycle, timer, flags); 对事件循环进行polliing  时间一般默认为 500 ms
