@@ -901,7 +901,35 @@ typedef enum {
     }
 }}}
 
+其中， 在各个phase的结束阶段，一般都是调用
+{{{
+    r->phase_handler++;
+    return NGX_AGAIN;
+}}}
+移动request 中 phase_handler的指针，并且示意主程序继续进行。
+
+这里，无论是phase handler,还是 location handler，我们都是可以在程序里进行注册的。
+
+另外， ngx_http_block 里面调用了 ngx_http_optimize_servers ，这个函数对listening和connection相关的变量进行了初始化和调优，并最终在 ngx_http_add_listening （被ngx_http_add_listening调用） 中注册了listening 的 handler 为 ngx_http_init_connection
+
+{{{
+    ls->handler = ngx_http_init_connection;
+}}}
+
+ngx_http_init_connection 在 ngx_http_request.c中定义，后续会进行详细的介绍
+
+
+=== ngx_http_request.[c|h] ===
+
+这里面，ngx_http_init_connection 注册了connection事件的读操作的回叫函数， 并将写操作设置为空函数
+{{{
+    rev = c->read;
+    rev->handler = ngx_http_init_request;
+    c->write->handler = ngx_http_empty_handler;
+}}}
 
 === ngx_http_core_module.[c|h] ===
 
 对于 ngx_http_core_module 是http 模块中比较重要的模块， 他本身是一个 NGX_HTTP_MODULE （不同于ngx_http_module, ngx_http_module本质上是一个 NGX_CORE_MODULE
+
+这里面对http block下面的一些指令进行了处理， 比如 server, location 等，
