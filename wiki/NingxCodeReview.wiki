@@ -1028,3 +1028,53 @@ nginx的 internal redirect 有两种方式， 一个是调用 ngx_http_internal_
 关于internal redirect 和 subrequest,他们有类似的地方，都是在最后调用 ngx_http_handler 重新开始对request的处理，但是不同的地方我想主要是 subrequest会新建立一个request结构，原来的request处理并不会结束，而 internal redirect会结束当前的请求处理，使用嗯但前的request结构体来发起请求。
 
 === 关于upstream ===
+
+upstream是nginx里面非常重要的一种处理模式，nginx的很多模块都是使用他来完成的， upstream和普通的handler有很大的不同，比如nginx的location handler 和phase handler, 他们的处理模式非常类似apache的handler,就是获取后同步的进行处理，但是对于有些场合，比如proxy或者fastcgi, nginx进程需要和上游的服务(http,或者php-cgi）进行交互，并且将结果返回给客户端，在交互的过程中，由于后端服务的响应时间各异，如果后端服务的响应时间过长，nginx等待后端服务响应的过程一之同步阻塞在这里是不现实的，所以nginx采用了异步的方案，每当上游服务器有响应的时候才进行处理，并将处理结果返回给前端，这样nginx在处理上游请求的时候，可以同时注册多个io时间，使用epoll_wait(linux下默认) 也就是nginx的主事件循环进行处理，大大提高了nginx的并发能里，每个进程可以处理多个连接 ，不会因为一个上游连接阻塞整个nginx进程， 当然这也有依赖于你程序的实现方式。
+
+关于upstream的使用方式， evan miller的文章里已经说的很清楚了，就是可以在location handler里（或者其它插入点中） 注册upstream的一些callback 
+
+
+{{{
+    u->conf = &plcf->upstream;
+
+/* attach the callback functions */
+    u->create_request = ngx_http_proxy_create_request;
+    u->reinit_request = ngx_http_proxy_reinit_request;
+    u->process_header = ngx_http_proxy_process_status_line;
+    u->abort_request = ngx_http_proxy_abort_request;
+    u->finalize_request = ngx_http_proxy_finalize_request;
+
+    r->upstream = u;
+
+}}}
+
+并且最后在调用 ngx_http_read_client_request_body 中传入 ngx_http_upstream_init 作为callback function 参数初始化 upstream流程, 在 ngx_http_upsteam_init 里面，会调用 ngx_http_upstream_connect建立连接，并注册读写的event handler
+
+{{{
+	/* event handler 最终会根据读／或者写的请求调用 write_event_handler和 read_event_handler ，也就是  ngx_http_upstream_send_request_handler和
+	ngx_http_upstream_process_header */
+    c->write->handler = ngx_http_upstream_handler;
+    c->read->handler = ngx_http_upstream_handler;
+
+    u->write_event_handler = ngx_http_upstream_send_request_handler;
+    u->read_event_handler = ngx_http_upstream_process_header;
+}}}
+
+这里需要注意的是，在处理上游请求的时候，由于是异步的事件，所以每次上游服务器在调用callback的时候并不一定返回的是全部数据，process_header 函数必须根据判断每次返回的数据包是否完成，如果没有处理完成则返回 NGX_AGAIN,来指示nginx需要重新进入process_header函数进行处理，并知道处理完成的时候返回NGX_OK 来指示nginx完成处理。 具体的例子可以参考 fastcgi 模块的ngx_http_fastcgi_process_header函数
+
+另外， nginx可以针对上游服务的响应body进行处理， 通过注册 u->pipe->input_filter 这个回叫来实现，同样可以参考fastcgi模块，下面是例子
+
+{{{
+    /* 这里注册对于响应体的处理 */
+    u->pipe->input_filter = ngx_http_fastcgi_input_filter;
+    u->pipe->input_ctx = r;
+}}}
+
+通常在处理的过程中需要自己创建状态机来处理请求的不同状态，对于一些请求相关的信息，可以自己创建结构体，通过 
+
+{{{
+#define ngx_http_get_module_ctx(r, module)  (r)->ctx[module.ctx_index]
+#define ngx_http_set_ctx(r, c, module)      r->ctx[module.ctx_index] = c;
+}}}
+
+这两个宏进行读取和存储。
