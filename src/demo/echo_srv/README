@@ -1,0 +1,18 @@
+一个简单的echo server 代码, 有很多bug,仅用来测试用
+--------------------------------
+
+使用epoll作为事件模型， 用于和 echov4 扩展配合展示upstream模块的运行方式
+
+编译  ：
+    make 
+运行  ：
+    ./ep_server &
+
+测试  ：
+> telnet localhost 1235
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Hello, I am Jing
+Hello, I am Jing
+
