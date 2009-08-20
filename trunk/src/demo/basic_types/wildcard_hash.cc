@@ -30,7 +30,7 @@ void dump_hash_bucket(ngx_hash_elt_t *bucket, string indent)
 	printf("%s{\n",indent.c_str());
 	while(bucket->value) {
 		string key((char*)(bucket->name), bucket->len);
-		void *val = (void*)(((uintptr_t)(bucket->value))&(~3UL));
+		void *val = (void*)(((uintptr_t)(bucket->value))&((uintptr_t)~3));
 
 		switch(((uintptr_t)(bucket->value))&0x3) {
 			case 0:	// normal value
@@ -112,6 +112,12 @@ int main()
 	props[3].value = ngx_pcalloc(p, (strlen(str[3])+1)); ngx_memcpy(props[3].value, str[3], strlen(str[3]));
 	props[4].value = ngx_pcalloc(p, (strlen(str[3])+1)); ngx_memcpy(props[4].value, str[3], strlen(str[3]));
 	props[5].value = ngx_pcalloc(p, (strlen(str[3])+1)); ngx_memcpy(props[5].value, str[3], strlen(str[3]));
+
+	for(size_t i = 0; i < sizeof(props)/sizeof(props[0]); ++i) {
+		char buf[255] = {0};
+		ngx_sprintf((u_char*)buf, "%V", &(props[i].key));
+		printf("%s => %s\n",buf, (char*)(props[i].value));
+	}
 
 	ngx_hash_init_t hinit;
 
