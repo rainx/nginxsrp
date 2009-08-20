@@ -7,7 +7,8 @@ TARGETS := mem_cleanup \
 			queue_op \
 			hash_op \
 			shmem_op \
-			wildcard_hash
+			wildcard_hash \
+			list_op
 NGX_ROOT := ../../nginx-0.7.61
 CC := gcc
 CXX := g++
@@ -110,4 +111,14 @@ shmem_op: shmem_op.c
 		$(NGX_ROOT)/objs/src/os/unix/ngx_shmem.o \
 		-o $@ $(LDFLAGS) $(LIBS)
 
+list_op: list_op.cc
+	$(CXX) -c $(CFLAGS) $(INCS) $^
+	$(CC) $(patsubst %.cc,%.o,$^) \
+		$(NGX_ROOT)/objs/src/core/ngx_palloc.o \
+		$(NGX_ROOT)/objs/src/core/ngx_string.o \
+		$(NGX_ROOT)/objs/src/core/ngx_hash.o \
+		$(NGX_ROOT)/objs/src/core/ngx_list.o \
+		$(NGX_ROOT)/objs/src/core/ngx_array.o \
+		$(NGX_ROOT)/objs/src/os/unix/ngx_alloc.o \
+		-o $@ $(LDFLAGS) $(LIBS) -lstdc++
 
