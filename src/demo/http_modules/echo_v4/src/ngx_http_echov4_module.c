@@ -244,6 +244,7 @@ ngx_http_echo_handler(ngx_http_request_t* r)
     size_t                          post_content_len = 0;
     ngx_http_echov4_request_ctx_t*  echo_ctx;
     ngx_http_upstream_t*            u;
+
     echo_conf = ngx_http_get_module_loc_conf(r, ngx_http_echov4_module);
     // 我们模块运行时的上下文，如果没有的话，我们将进行初始化工作
     echo_ctx  = (ngx_http_echov4_request_ctx_t*) ngx_http_get_module_ctx(r, ngx_http_echov4_module);
@@ -300,7 +301,7 @@ ngx_http_echo_handler(ngx_http_request_t* r)
 
     ngx_http_upstream_init(r);
 
-    return NGX_OK;
+    return NGX_DONE;
 }
 
 
@@ -343,14 +344,16 @@ ngx_http_dump_request_body(ngx_http_request_t* r, void** post_content_ptr)
             rb->buf->pos,
             rb->buf->last
             );
-    post_content = ngx_palloc(r->pool, rb->buf->last-rb->buf->pos + 1);
-    ngx_cpystrn(post_content, rb->buf->pos, rb->buf->last-rb->buf->pos);
+    post_content = ngx_palloc(r->pool, rb->buf->last - rb->buf->pos + 1);
+    ngx_cpystrn(post_content, rb->buf->pos, rb->buf->last - rb->buf->pos + 1);	// ngx_cpystrn()长度参数应为实际数据长度+1，是其for循环编写有误所致……
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, 
-            "\n                       [ buf pos data  = %s ]",
-            post_content
+            "\n                       [ buf pos data  = %s ]\n"
+			"                         [ data length = %d ]\n",
+            post_content,
+			rb->buf->last - rb->buf->pos
             );
     *post_content_ptr = post_content;
-    return rb->buf->last-rb->buf->pos;
+    return rb->buf->last - rb->buf->pos;
 }
 
 static void ngx_http_dump_request_headers(ngx_http_request_t* r)
@@ -478,7 +481,7 @@ ngx_http_echo_create_request(ngx_http_request_t* r)
 
     r->upstream->request_bufs = cl;
 
-    b->last = ngx_copy(b->last, ctx->post_content->data, ctx->post_content->len);
+    b->last = ngx_copy(b->last, ctx->post_content->data, ctx->post_content->len + 1);	// 复制末尾的'\0'以保证process_header正常完成
     
     return NGX_OK;
 }
