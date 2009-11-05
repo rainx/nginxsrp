@@ -10,12 +10,12 @@
 <pre>
 X-Staged-Next: <backend-path-to-request-next>
 </pre>
-这里 &lt;backend-path-to-request-next&gt; 为再次向后端请求下一阶段结果时的请求路径。不管客户端原本的 HTTP 请求方法如何，当分段反向代理发起下一阶段请求时总是使用 POST 方式进行。本次响应头中所有不是分段交互协议一部分的字段都会被丢弃。
+这里 &lt;backend-path-to-request-next> 为再次向后端请求下一阶段结果时的请求路径。不管客户端原本的 HTTP 请求方法如何，当分段反向代理发起下一阶段请求时总是使用 POST 方式进行。本次响应头中所有不是分段交互协议一部分的字段都会被丢弃。
 
 为保证 HTTP/1.1 的虚拟主机功能可用，并提供切换到不同后端服务的能力，可以增加如下格式的可选头：
 <pre>
-X-Staged-Next-Host: &lt;virtual host name>
-X-Staged-Next-Server: &lt;addr>:&lt;port> | &lt;unix socket path>
+X-Staged-Next-Host: <virtual host name>
+X-Staged-Next-Server: <addr>:<port> | <unix socket path>
 </pre>
 X-Staged-Next-Host 头若存在，则发起下一阶段 HTTP POST 请求时就会将其内容作为 Host 请求头的新值；否则下一阶段 HTTP POST 请求头中的 Host 取值维持初始客户端请求中的 Host 值不变。X-Staged-Next-Server 头若存在，则下一阶段 HTTP POST 请求的目标服务器会切换到指定的位置上；否则下一阶段 HTTP POST 请求的目标服务器维持原有的后端服务器不变。
 
