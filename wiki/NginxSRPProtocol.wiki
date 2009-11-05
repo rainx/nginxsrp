@@ -10,7 +10,7 @@
 <pre>
 X-Staged-Next: <backend-path-to-request-next>
 </pre>
-这里 &lt;backend-path-to-request-next> 为再次向后端请求下一阶段结果时的请求路径。不管客户端原本的 HTTP 请求方法如何，当分段反向代理发起下一阶段请求时总是使用 POST 方式进行。本次响应头中所有不是分段交互协议一部分的字段都会被丢弃。
+这里 <backend-path-to-request-next> 为再次向后端请求下一阶段结果时的请求路径。不管客户端原本的 HTTP 请求方法如何，当分段反向代理发起下一阶段请求时总是使用 POST 方式进行。本次响应头中所有不是分段交互协议一部分的字段都会被丢弃。
 
 为保证 HTTP/1.1 的虚拟主机功能可用，并提供切换到不同后端服务的能力，可以增加如下格式的可选头：
 <pre>
@@ -21,12 +21,12 @@ X-Staged-Next-Host 头若存在，则发起下一阶段 HTTP POST 请求时就�
 
 响应体可能包含 2 部分内容：上下文传递数据和外部请求数据。其中上下文传递数据会暂存在反向代理内，待发起下一阶段请求时整合在请求体数据中，代理本身不对其做任何解析修改；若响应头中包含外部连接请求头，则反向代理会解析外部请求数据部分，否则直接将这部分数据丢弃。响应体具体格式规定如下：
 <pre>
-&lt;response body> ::= &lt;data block>*
-&lt;data block> ::= &lt;context data block> | &lt;extern request data block>
-&lt;context data block> ::= 'T' &lt;4-bytes length> &lt;data content>
-&lt;extern request data block> ::= 'E' &lt;4-bytes request id> &lt;4-bytes length> &lt;data content>
+<response body> ::= <data block>*
+<data block> ::= <context data block> | <extern request data block>
+<context data block> ::= 'T' <4-bytes length> <data content>
+<extern request data block> ::= 'E' <4-bytes request id> <4-bytes length> <data content>
 </pre>
-其中 &lt;request id> 为该外部请求的唯一整数标识，其对应的外部请求数据则交给各自的外部请求协议处理器自行解释，若不存在对应 id 的外部请求头时对应的数据块会被丢弃。下面是外部请求协议对应的 &lt;data content> 格式：
+其中 <request id> 为该外部请求的唯一整数标识，其对应的外部请求数据则交给各自的外部请求协议处理器自行解释，若不存在对应 id 的外部请求头时对应的数据块会被丢弃。下面是外部请求协议对应的 <data content> 格式：
 <pre>
 &lt;data content> ::= &lt;http schema data content> | ...
 
