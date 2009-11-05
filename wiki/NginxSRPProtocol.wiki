@@ -26,29 +26,29 @@ X-Staged-Next-Host 头若存在，则发起下一阶段 HTTP POST 请求时就�
 }}}
 其中 <request id> 为该外部请求的唯一整数标识，其对应的外部请求数据则交给各自的外部请求协议处理器自行解释，若不存在对应 id 的外部请求头时对应的数据块会被丢弃。下面是外部请求协议对应的 <data content> 格式：
 <pre>
-&lt;data content> ::= &lt;http schema data content> | ...
+<data content> ::= <http schema data content> | ...
 
-&lt;http schema data content> ::= &lt;1-byte http method> 'd' (&lt;header key> &lt;header val>)* 'e' &lt;body content>
-&lt;header key> ::= &lt;2-bytes length> &lt;key content>
-&lt;header val> ::= &lt;2-bytes length> &lt;val content>
-&lt;http method> ::= 0 (GET) | 1 (POST)
+<http schema data content> ::= <1-byte http method> 'd' (<header key> <header val>)* 'e' <body content>
+<header key> ::= <2-bytes length> <key content>
+<header val> ::= <2-bytes length> <val content>
+<http method> ::= 0 (GET) | 1 (POST)
 </pre>
 出现类型未知的数据块或数据块长度有误时都视为有效数据结束，剩余数据全部丢弃。
 
 2. 若后端响应结果中包含 X-Staged-Request 头，则意味着需要发起外部连接请求。X-Staged-Request 的格式如下：
 <pre>
-X-Staged-Request: &lt;uri-with-schema>[; id=&lt;request id>]
+X-Staged-Request: <uri-with-schema>[; id=<request id>]
 </pre>
-这里 &lt;uri-with-schema> 是带有请求协议 schema 的标准外部 URI；&lt;request id> 为十进制文本表示的请求 id，可在出现多个 X-Staged-Request 头并发进行多个外部请求时通过 id 子域(若忽略则默认为 0)指明每个请求的唯一标识，标识相同的头会被后来者覆盖；每个外部请求所需的数据(对于HTTP协议请求来说就是请求方式、请求头和请求体数据；对于其他协议的请求则可能不同)在对应 id 的外部请求数据块中以指定格式保存。
+这里 <uri-with-schema> 是带有请求协议 schema 的标准外部 URI；<request id> 为十进制文本表示的请求 id，可在出现多个 X-Staged-Request 头并发进行多个外部请求时通过 id 子域(若忽略则默认为 0)指明每个请求的唯一标识，标识相同的头会被后来者覆盖；每个外部请求所需的数据(对于HTTP协议请求来说就是请求方式、请求头和请求体数据；对于其他协议的请求则可能不同)在对应 id 的外部请求数据块中以指定格式保存。
 
 当所有外部连接请求均结束时，若之前后端的响应结果中包含 X-Staged-Next 头，则以如下格式将外部请求响应结果和上下文传递数据合并起来作为发起下一段 POST 请求的请求体：
 <pre>
-&lt;request body> ::= &lt;data block>*
-&lt;data block> ::= &lt;context data block> | &lt;extern response data block>
-&lt;context data block> ::= 'T' &lt;4-bytes length> &lt;data content>
-&lt;extern response data block> ::= 'E' &lt;4-bytes request id> &lt;4-bytes length> &lt;data content>
+<request body> ::= <data block>*
+<data block> ::= <context data block> | <extern response data block>
+<context data block> ::= 'T' <4-bytes length> <data content>
+<extern response data block> ::= 'E' <4-bytes request id> <4-bytes length> <data content>
 </pre>
-若之前后端的响应结果中没有 X-Staged-Next 头，则以 &lt;request id> 最小的外部连接请求响应结果作为客户端连接的最终响应结果，具体的响应头和响应体的内容如何是由该请求的协议处理器自行决定的。
+若之前后端的响应结果中没有 X-Staged-Next 头，则以 <request id> 最小的外部连接请求响应结果作为客户端连接的最终响应结果，具体的响应头和响应体的内容如何是由该请求的协议处理器自行决定的。
 
 若在后端的最终响应结果中以 HTTP 外部请求作为响应给客户端的内容，则 HTTP 协议处理器应支持用后端响应结果中的某些 Header 覆盖外部请求响应结果中对应 Header 内容的功能。允许被后端响应头覆盖的 Header 为：
 <pre>
@@ -63,7 +63,7 @@ Expires
 
 4. 为了避免客户端有意无意地直接请求中间处理阶段的代码，分段反向代理会在客户端首次发起连接时产生一个随机串，在处理该连接过程中每次向后端发起的 HTTP 请求中用 X-Staged-Crumb 头(必选)带上该随机串：
 <pre>
-X-Staged-Crumb: &lt;random string>
+X-Staged-Crumb: <random string>
 </pre>
 后端返回中间响应结果时，用只有后端服务自己知道的密钥同分段反向代理传入的随机串合并后进行 SHA1 签名，并将签名结果保存在上下文传递数据中；下一阶段的代码获取到上下文传递数据后，会从中提取出签名串，并同本次请求中反向代理发送的随机串的签名进行比对，只有二者匹配时才允许继续处理。
 
