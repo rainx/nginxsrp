@@ -18,12 +18,12 @@ X-Staged-Next-Server: <addr>:<port> | <unix socket path>
 X-Staged-Next-Host 头若存在，则发起下一阶段 HTTP POST 请求时就会将其内容作为 Host 请求头的新值；否则下一阶段 HTTP POST 请求头中的 Host 取值维持初始客户端请求中的 Host 值不变。X-Staged-Next-Server 头若存在，则下一阶段 HTTP POST 请求的目标服务器会切换到指定的位置上；否则下一阶段 HTTP POST 请求的目标服务器维持原有的后端服务器不变。
 
 响应体可能包含 2 部分内容：上下文传递数据和外部请求数据。其中上下文传递数据会暂存在反向代理内，待发起下一阶段请求时整合在请求体数据中，代理本身不对其做任何解析修改；若响应头中包含外部连接请求头，则反向代理会解析外部请求数据部分，否则直接将这部分数据丢弃。响应体具体格式规定如下：
-<pre>
+{{{
 <response body> ::= <data block>`*`
 <data block> ::= <context data block> | <extern request data block>
 <context data block> ::= 'T' <4-bytes length> <data content>
 <extern request data block> ::= 'E' <4-bytes request id> <4-bytes length> <data content>
-</pre>
+}}}
 其中 <request id> 为该外部请求的唯一整数标识，其对应的外部请求数据则交给各自的外部请求协议处理器自行解释，若不存在对应 id 的外部请求头时对应的数据块会被丢弃。下面是外部请求协议对应的 <data content> 格式：
 <pre>
 &lt;data content> ::= &lt;http schema data content> | ...
