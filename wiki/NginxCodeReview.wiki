@@ -291,7 +291,7 @@ typedef struct ngx_chain_s       ngx_chain_t;
 
 下面是我简单画的一个图来描述这个结构：
 
-http://farm3.static.flickr.com/2435/3765612584_e184174353_o.png
+http://img02.taobaocdn.com/tps/i2/T1m1JRXnRcXXXXXXXX-991-634.png
 
 link : http://www.flickr.com/photos/rainx/3765612584/sizes/o/
 
@@ -543,7 +543,7 @@ struct ngx_queue_s {
 
 另外，整个queue结构中包含一个 sentinel（哨兵） 节点， 他指向队列的头和尾
 
-http://farm3.static.flickr.com/2653/3771477738_68830e4816_o.png
+http://img04.taobaocdn.com/tps/i4/T1WeBRXaxeXXXXXXXX-503-409.png
 
 下面是一个queue操作的例子
 
@@ -653,7 +653,7 @@ ngx_hash.{c|h} 实现了nginx里面比较重要的一个hash结构， 这个在�
 
 下面是简单 hash 结构的内存布局：
 
-http://farm3.static.flickr.com/2619/3780810336_c28426b7d2_o.png
+http://img01.taobaocdn.com/tps/i1/T1GuRRXjXaXXXXXXXX-1019-777.png
 
 link: http://www.flickr.com/photos/chaoslawful/3780810336/sizes/o/
 
@@ -824,7 +824,7 @@ error_log  logs/error.log  debug;
 
 其中一个比较重要的函数调用是，  ngx_init_cycle, 这个是使用kscope输出的他的调用关系，他被main,  ngx_master_process_cycle,ngx_single_process_cycle 调用， 其中后两者是在reconfigure的时候被调用的
 
-http://farm3.static.flickr.com/2484/3787983171_b75bd92001_o.png
+http://img03.taobaocdn.com/tps/i3/T1AuBRXeNeXXXXXXXX-608-117.png
 
 他主要做了如下几件事情:
 
